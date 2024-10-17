@@ -1,16 +1,44 @@
 import React from "react";
-import stylse from "./LoginComponents.module.css";
+import styles from "./LoginComponents.module.css"; // اصلاح نام به `styles`
 import * as Yup from "yup";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 
 const LoginComponents = () => {
-  const formField = { username: "", password: "" };
-  const submitHandler = (value) => {
-    console.log(value);
+  const formField = { phone_number: "", password: "" }; // استفاده از phone_number به جای username
+
+  const submitHandler = async (values, { setErrors }) => {
+    try {
+      const response = await fetch("http://127.0.0.1:8001/accounts/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: values.phone_number,
+          password: values.password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Login failed!");
+      }
+
+      const data = await response.json();
+      
+      // در اینجا می‌توانید توکن را دریافت و ذخیره کنید
+      localStorage.setItem("token", data.token);
+
+      // بعد از ورود موفقیت‌آمیز، کاربر را به صفحه‌ی دیگر ریدایرکت کنید
+      window.location.href = "/dashboard"; // آدرس صفحه مقصد
+
+    } catch (error) {
+      setErrors({ phone_number: "Invalid phone number or password" });
+    }
   };
+
   const validationHandler = Yup.object({
-    username: Yup.string().required("Username is required"),
-    password: Yup.string().required("Password is required").min(8),
+    phone_number: Yup.string().required("Phone number is required"),
+    password: Yup.string().required("Password is required").min(8, "Password must be at least 8 characters"),
   });
 
   return (
@@ -20,36 +48,35 @@ const LoginComponents = () => {
       validationSchema={validationHandler}
       validateOnBlur={false}
       validateOnChange={false}
-      className={`${stylse.FormikStyle}`}
     >
-      <Form className={`${stylse.FormStyle}`}>
-        <h2 className={`${stylse.LoginLabel}`}>Login</h2>
+      <Form className={`${styles.FormStyle}`}>
+        <h2 className={`${styles.LoginLabel}`}>Login</h2>
+
         <Field
-          name="username"
+          name="phone_number"
           type="text"
-          className={`${stylse.InputStyles}`}
-          placeholder="Username"
+          className={`${styles.InputStyles}`}
+          placeholder="Phone Number"
         />
         <ErrorMessage
-          name="username"
-          component={() => {
-            alert("error in username or password");
-          }}
-          className={stylse.error}
+          name="phone_number"
+          component="div"
+          className={styles.error}
         />
+
         <Field
           name="password"
           type="password"
-          className={`${stylse.InputStyles}`}
+          className={`${styles.InputStyles}`}
           placeholder="Password"
         />
         <ErrorMessage
           name="password"
-          component={() => {
-            alert("error in username or password");
-          }}
+          component="div"
+          className={styles.error}
         />
-        <button type="submit" className={`${stylse.ButtonStyles}`}>
+
+        <button type="submit" className={`${styles.ButtonStyles}`}>
           Submit
         </button>
       </Form>
